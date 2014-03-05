@@ -111,9 +111,8 @@ mainloop:
 			timerChan = timer.C
 		case <-timerChan:
 			cmd = exec.Command("/bin/sh", "-c", "exec " + cmdbox.Text())
-			// set standard file descriptors properly (so they aren't /dev/null)
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
+			// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO)
+			// keep stdout /dev/null to avoid stty mucking
 			cmd.Stderr = os.Stderr
 			err := cmd.Start()
 			if err != nil {
