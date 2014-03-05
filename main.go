@@ -15,6 +15,29 @@ const (
 	timeFmt = "3:04 PM"
 )
 
+// If later hasn't happened yet, make it happen on the day of now; if not, the day after.
+func bestTime(now time.Time, later time.Time) time.Time {
+	now = now.Local()		// use local time to make things make sense
+	nowh, nowm, nows := now.Clock()
+	laterh, laterm, laters := later.Clock()
+	add := false
+	if nowh > laterh {
+		add = true
+	} else if (nowh == laterh) && (nowm > laterm) {
+		add = true
+	} else if (nowh == laterh) && (nowm == laterm) && (nows >= laters) {
+		// >= in the case we're on the exact second; add a day because the alarm should have gone off by now otherwise!
+		add = true
+	}
+println(nowh,nowm,nows,add,laterh,laterm,laters)
+	if add {
+		now = now.AddDate(0, 0, 1)
+	}
+	return time.Date(now.Year(), now.Month(), now.Day(),
+		laterh, laterm, laters, 0,
+		now.Location())
+}
+
 func myMain() {
 	w := ui.NewWindow("wakeup", 400, 100)
 	w.Closing = ui.Event()
@@ -59,7 +82,9 @@ mainloop:
 					timebox.Text(), err, timeFmt)
 				continue
 			}
-			fmt.Println(alarmTime, time.Now().Sub(alarmTime))
+			now := time.Now()
+			later := bestTime(now, alarmTime)
+			fmt.Println(later, later.Sub(now))
 			// TODO
 		case <-bStop.Clicked:
 			// TODO
