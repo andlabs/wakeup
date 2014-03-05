@@ -110,7 +110,7 @@ mainloop:
 			timer = time.NewTimer(later.Sub(now))
 			timerChan = timer.C
 		case <-timerChan:
-			cmd = exec.Command("/bin/sh", "sh", "-c", cmdbox.Text())
+			cmd = exec.Command("/bin/sh", "-c", cmdbox.Text())
 			// set standard file descriptors properly (so they aren't /dev/null)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
