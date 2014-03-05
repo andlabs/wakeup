@@ -111,6 +111,10 @@ mainloop:
 			timerChan = timer.C
 		case <-timerChan:
 			cmd = exec.Command("/bin/sh", "sh", "-c", cmdbox.Text())
+			// set standard file descriptors properly (so they aren't /dev/null)
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
 			err := cmd.Start()
 			if err != nil {
 				ui.MsgBoxError("wakeup", "Error running program: %v", err)
