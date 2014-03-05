@@ -11,7 +11,7 @@ import (
 
 const (
 	defCmdLine = "mpv -loop inf ~/ring.wav"
-	defTime = "10:00 AM"
+	defTime = "10:30 AM"
 	timeFmt = "3:04 PM"
 )
 
