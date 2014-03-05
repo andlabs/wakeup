@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 //	"os/exec"
-//	"time"
+	"time"
 	"github.com/andlabs/ui"
 )
 
 const (
 	defCmdLine = "mpv -loop inf ~/ring.wav"
 	defTime = "10:00 AM"
+	timeFmt = "3:04 PM"
 )
 
 func myMain() {
@@ -51,6 +52,14 @@ mainloop:
 		case <-w.Closing:
 			break mainloop
 		case <-bStart.Clicked:
+			alarmTime, err := time.Parse(timeFmt, timebox.Text())
+			if err != nil {
+				ui.MsgBoxError("wakeup",
+					"Error parsing time %q: %v\nMake sure your time is in the form %q (without quotes.",
+					timebox.Text(), err, timeFmt)
+				continue
+			}
+			fmt.Println(alarmTime, time.Now().Sub(alarmTime))
 			// TODO
 		case <-bStop.Clicked:
 			// TODO
