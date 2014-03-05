@@ -29,7 +29,6 @@ func bestTime(now time.Time, later time.Time) time.Time {
 		// >= in the case we're on the exact second; add a day because the alarm should have gone off by now otherwise!
 		add = true
 	}
-println(nowh,nowm,nows,add,laterh,laterm,laters)
 	if add {
 		now = now.AddDate(0, 0, 1)
 	}
@@ -39,6 +38,18 @@ println(nowh,nowm,nows,add,laterh,laterm,laters)
 }
 
 func myMain() {
+	var timer *time.Timer
+	var timerChan <-chan time.Time
+
+	stop := func() {
+		// TODO stop process
+		if timer != nil {		// stop the timer if we started it
+			timer.Stop()
+			timer = nil
+			timerChan = nil
+		}
+	}
+
 	w := ui.NewWindow("wakeup", 400, 100)
 	w.Closing = ui.Event()
 	cmdbox := ui.NewLineEdit(defCmdLine)
@@ -75,6 +86,7 @@ mainloop:
 		case <-w.Closing:
 			break mainloop
 		case <-bStart.Clicked:
+			stop()		// only one alarm at a time
 			alarmTime, err := time.Parse(timeFmt, timebox.Text())
 			if err != nil {
 				ui.MsgBoxError("wakeup",
@@ -84,12 +96,20 @@ mainloop:
 			}
 			now := time.Now()
 			later := bestTime(now, alarmTime)
-			fmt.Println(later, later.Sub(now))
-			// TODO
+			timer = time.NewTimer(later.Sub(now))
+			timerChan = timer.C
+		case <-timerChan:
+			ui.MsgBox("wakeup", "alarm")
+			timer = nil
+			timerChan = nil
 		case <-bStop.Clicked:
-			// TODO
+			stop()
+			ui.MsgBox("wakeup", "abort")
 		}
 	}
+
+	// clean up
+	stop()
 }
 
 func main() {
