@@ -4,7 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
-//	"os/exec"
+	"os/exec"
 	"time"
 	"github.com/andlabs/ui"
 )
@@ -38,11 +38,22 @@ func bestTime(now time.Time, later time.Time) time.Time {
 }
 
 func myMain() {
+	var cmd *exec.Cmd
 	var timer *time.Timer
 	var timerChan <-chan time.Time
 
 	stop := func() {
-		// TODO stop process
+		if cmd != nil {		// stop the command if it's running
+			err := cmd.Process.Kill()
+			if err != nil {
+				ui.MsgBoxError("wakeup", "Error killing process: %v\nYou may need to kill it manually.", err)
+			}
+			err = cmd.Process.Release()
+			if err != nil {
+				ui.MsgBoxError("wakeup", "Error releasing process: %v", err)
+			}
+			cmd = nil
+		}
 		if timer != nil {		// stop the timer if we started it
 			timer.Stop()
 			timer = nil
@@ -99,7 +110,12 @@ mainloop:
 			timer = time.NewTimer(later.Sub(now))
 			timerChan = timer.C
 		case <-timerChan:
-			ui.MsgBox("wakeup", "alarm")
+			cmd = exec.Command("/bin/sh", "sh", "-c", cmdbox.Text())
+			err := cmd.Start()
+			if err != nil {
+				ui.MsgBoxError("wakeup", "Error running program: %v", err)
+				cmd = nil
+			}
 			timer = nil
 			timerChan = nil
 		case <-bStop.Clicked:
