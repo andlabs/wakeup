@@ -101,7 +101,7 @@ mainloop:
 			alarmTime, err := time.Parse(timeFmt, timebox.Text())
 			if err != nil {
 				ui.MsgBoxError("wakeup",
-					"Error parsing time %q: %v\nMake sure your time is in the form %q (without quotes.",
+					"Error parsing time %q: %v\nMake sure your time is in the form %q (without quotes).",
 					timebox.Text(), err, timeFmt)
 				continue
 			}
@@ -111,7 +111,7 @@ mainloop:
 			timerChan = timer.C
 		case <-timerChan:
 			cmd = exec.Command("/bin/sh", "-c", "exec " + cmdbox.Text())
-			// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO)
+			// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO should I allow this program to act as a pipe?)
 			// keep stdout /dev/null to avoid stty mucking
 			cmd.Stderr = os.Stderr
 			err := cmd.Start()
@@ -123,7 +123,6 @@ mainloop:
 			timerChan = nil
 		case <-bStop.Clicked:
 			stop()
-			ui.MsgBox("wakeup", "abort")
 		}
 	}
 
