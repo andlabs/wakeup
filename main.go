@@ -69,11 +69,11 @@ func myMain() {
 	bStop := ui.NewButton("Stop")
 
 	// a Stack to keep both buttons at the same size
-	btnbox := ui.NewStack(ui.Horizontal, bStart, bStop)
+	btnbox := ui.NewHorizontalStack(bStart, bStop)
 	btnbox.SetStretchy(0)
 	btnbox.SetStretchy(1)
-	// and a Stack around that Stack to keep them at a reasonable size
-	btnbox = ui.NewStack(ui.Horizontal, btnbox)
+	// and a Stack around that Stack to keep them at a reasonable size, with space to their right
+	btnbox = ui.NewHorizontalStack(btnbox)
 
 	// the main layout
 	grid := ui.NewGrid(2,
