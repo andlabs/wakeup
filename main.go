@@ -66,7 +66,6 @@ func myMain() {
 	}
 
 	w := ui.NewWindow("wakeup", 400, 100)
-	w.Closing = ui.Event()
 	cmdbox := ui.NewLineEdit(defCmdLine)
 	timebox := ui.NewLineEdit(defTime)
 	bStart := ui.NewButton("Start")
