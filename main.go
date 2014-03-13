@@ -46,11 +46,15 @@ func myMain() {
 		if cmd != nil {		// stop the command if it's running
 			err := cmd.Process.Kill()
 			if err != nil {
-				ui.MsgBoxError("wakeup", "Error killing process: %v\nYou may need to kill it manually.", err)
+				ui.MsgBoxError(
+					fmt.Sprintf("Error killing process: %v", err),
+					"You may need to kill it manually.")
 			}
 			err = cmd.Process.Release()
 			if err != nil {
-				ui.MsgBoxError("wakeup", "Error releasing process: %v", err)
+				ui.MsgBoxError(
+					fmt.Sprintf("Error releasing process: %v", err),
+					"")
 			}
 			cmd = nil
 		}
@@ -87,7 +91,9 @@ func myMain() {
 
 	err := w.Open(grid)
 	if err != nil {
-		ui.MsgBoxError("wakeup", "Error opening window: %v", err)
+		ui.MsgBoxError(
+			fmt.Sprintf("Error opening window: %v", err),
+			"")
 		os.Exit(1)
 	}
 
@@ -100,9 +106,9 @@ mainloop:
 			stop()		// only one alarm at a time
 			alarmTime, err := time.Parse(timeFmt, timebox.Text())
 			if err != nil {
-				ui.MsgBoxError("wakeup",
-					"Error parsing time %q: %v\nMake sure your time is in the form %q (without quotes).",
-					timebox.Text(), err, timeFmt)
+				ui.MsgBoxError(
+					fmt.Sprintf("Error parsing time %q: %v", timebox.Text(), err),
+					fmt.Sprintf("Make sure your time is in the form %q (without quotes).", timeFmt))
 				continue
 			}
 			now := time.Now()
@@ -116,7 +122,9 @@ mainloop:
 			cmd.Stderr = os.Stderr
 			err := cmd.Start()
 			if err != nil {
-				ui.MsgBoxError("wakeup", "Error running program: %v", err)
+				ui.MsgBoxError(
+					fmt.Sprintf("Error running program: %v", err),
+					"")
 				cmd = nil
 			}
 			timer = nil
