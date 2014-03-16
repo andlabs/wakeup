@@ -42,6 +42,8 @@ func myMain() {
 	var timer *time.Timer
 	var timerChan <-chan time.Time
 
+	status := ui.NewLabel("")
+
 	stop := func() {
 		if cmd != nil {		// stop the command if it's running
 			err := cmd.Process.Kill()
@@ -63,6 +65,7 @@ func myMain() {
 			timer = nil
 			timerChan = nil
 		}
+		status.SetText("")
 	}
 
 	w := ui.NewWindow("wakeup", 400, 100)
@@ -76,7 +79,7 @@ func myMain() {
 	btnbox.SetStretchy(0)
 	btnbox.SetStretchy(1)
 	// and a Stack around that Stack to keep them at a reasonable size, with space to their right
-	btnbox = ui.NewHorizontalStack(btnbox)
+	btnbox = ui.NewHorizontalStack(btnbox, status)
 
 	// the main layout
 	grid := ui.NewGrid(2,
@@ -114,17 +117,20 @@ mainloop:
 			later := bestTime(now, alarmTime)
 			timer = time.NewTimer(later.Sub(now))
 			timerChan = timer.C
+			status.SetText("Started")
 		case <-timerChan:
 			cmd = exec.Command("/bin/sh", "-c", "exec " + cmdbox.Text())
 			// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO should I allow this program to act as a pipe?)
 			// keep stdout /dev/null to avoid stty mucking
 			cmd.Stderr = os.Stderr
 			err := cmd.Start()
+			status.SetText("Firing")
 			if err != nil {
 				ui.MsgBoxError(
 					fmt.Sprintf("Error running program: %v", err),
 					"")
 				cmd = nil
+				status.SetText("")
 			}
 			timer = nil
 			timerChan = nil
