@@ -92,13 +92,7 @@ func myMain() {
 	grid.SetFilling(0, 1)				// make the two textboxes grow horizontally
 	grid.SetFilling(1, 1)
 
-	err := w.Open(grid)
-	if err != nil {
-		ui.MsgBoxError(
-			fmt.Sprintf("Error opening window: %v", err),
-			"")
-		os.Exit(1)
-	}
+	w.Open(grid)
 
 mainloop:
 	for {
