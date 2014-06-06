@@ -95,12 +95,13 @@ func myMain() {
 	grid.SetFilling(1, 1)
 
 	w.Open(grid)
+	
+	defer stop()
 
-mainloop:
 	for {
 		select {
 		case <-w.Closing:
-			break mainloop
+			return
 		case <-bStart.Clicked:
 			stop() // only one alarm at a time
 			alarmTime, err := time.Parse(timeFmt, timebox.Text())
@@ -135,9 +136,6 @@ mainloop:
 			stop()
 		}
 	}
-
-	// clean up
-	stop()
 }
 
 func main() {
