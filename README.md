@@ -1,6 +1,6 @@
 # wakeup
 
-![wakeup](https://raw.github.com/andlabs/master/screenshot.png)
+![wakeup](https://raw.githubusercontent.com/andlabs/wakeup/master/screenshot.png)
 
 This is just a simple alarm clock program in Go; it demonstrates http://github.com/andlabs/ui. The source should be self-explanatory; feel free to make suggestions.
 
