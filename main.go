@@ -50,13 +50,13 @@ func myMain() {
 		if cmd != nil { // stop the command if it's running
 			err := cmd.Process.Kill()
 			if err != nil {
-				ui.MsgBoxError(w,
+				<-w.MsgBoxError(
 					fmt.Sprintf("Error killing process: %v", err),
 					"You may need to kill it manually.")
 			}
 			err = cmd.Process.Release()
 			if err != nil {
-				ui.MsgBoxError(w,
+				<-w.MsgBoxError(
 					fmt.Sprintf("Error releasing process: %v", err),
 					"")
 			}
@@ -105,7 +105,7 @@ mainloop:
 			stop() // only one alarm at a time
 			alarmTime, err := time.Parse(timeFmt, timebox.Text())
 			if err != nil {
-				ui.MsgBoxError(w,
+				<-w.MsgBoxError(
 					fmt.Sprintf("Error parsing time %q: %v", timebox.Text(), err),
 					fmt.Sprintf("Make sure your time is in the form %q (without quotes).", timeFmt))
 				continue
@@ -123,7 +123,7 @@ mainloop:
 			err := cmd.Start()
 			status.SetText("Firing")
 			if err != nil {
-				ui.MsgBoxError(w,
+				<-w.MsgBoxError(
 					fmt.Sprintf("Error running program: %v", err),
 					"")
 				cmd = nil
