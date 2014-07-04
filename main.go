@@ -124,6 +124,8 @@ func NewMainWindow() (mw *MainWindow) {
 	grid.SetStretchy(2, 1) // make the Space noted above consume
 	grid.SetFilling(0, 1)  // make the two textboxes grow horizontally
 	grid.SetFilling(1, 1)
+	grid.SetFilling(0, 0)		// make the two Labels fill their cells so alignment works right on GTK+ (TODO)
+	grid.SetFilling(1, 0)
 
 	mw.win.Open(grid)
 
