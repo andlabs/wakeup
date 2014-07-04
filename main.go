@@ -40,7 +40,7 @@ func bestTime(now time.Time, later time.Time) time.Time {
 
 type MainWindow struct {
 	cmd			*exec.Cmd
-	stopchan		chan struct{}{}
+	stopChan		chan struct{}
 
 	win			*ui.Window
 	cmdbox		*ui.LineEdit
@@ -50,20 +50,17 @@ type MainWindow struct {
 	status		*ui.Label
 }
 
-const TimerFired = ui.CustomEvent
-
 // this is run as a separate goroutine
 // mw.stopChan must be valid before this function starts and must be closed after this function returns
-func (mw *MainWindow) timer(t time.Time) {
+func (mw *MainWindow) timer(t time.Duration) {
 	timer := time.NewTimer(t)
 	for {
 		select {
 		case <-timer.C:
-			// TODO
 			// send a signal to the main window that we're ready to run the command it has
-//			mw.win.Send(TimerFired, nil)
+			ui.Post(mw.win, nil)		// no data needed; just a signal
 			return
-		case <-mw.stopchan:
+		case <-mw.stopChan:
 			timer.Stop()
 			return
 		}
@@ -100,12 +97,16 @@ func (mw *MainWindow) stop() {
 func NewMainWindow() (mw *MainWindow) {
 	mw = new(MainWindow)
 
-	mw.win = ui.NewWindow("wakeup", 400, 100, mw)
+	mw.win = ui.NewWindow("wakeup", 400, 100)
+	mw.win.Closing = mw.Closing
+	mw.win.Posted = mw.Fire
 	mw.cmdbox = ui.NewLineEdit(defCmdLine)
 	mw.timebox = ui.NewLineEdit(defTime)
 	mw.bStart = ui.NewButton("Start")
+	mw.bStart.Clicked = mw.StartClicked
 	mw.bStop = ui.NewButton("Stop")
-	mw.status := ui.NewLabel("")
+	mw.bStop.Clicked = mw.stop
+	mw.status = ui.NewLabel("")
 
 	// a Stack to keep both buttons at the same size
 	btnbox := ui.NewHorizontalStack(mw.bStart, mw.bStop)
@@ -125,60 +126,56 @@ func NewMainWindow() (mw *MainWindow) {
 	grid.SetFilling(1, 1)
 
 	mw.win.Open(grid)
+
+	return mw
 }
 
-func (mw *MainWindow) Event(e ui.Event, d interface{}) {
-	switch e {
-	case ui.Closing:
-		mw.stop()
-		*(d.(*bool)) = true
-	case ui.Clicked:
-		switch d {
-		case mw.bStart:
-			mw.stop() // only one alarm at a time
-			alarmTime, err := time.Parse(timeFmt, timebox.Text())
-			if err != nil {
-				mw.win.MsgBoxError(
-					fmt.Sprintf("Error parsing time %q: %v", timebox.Text(), err),
-					fmt.Sprintf("Make sure your time is in the form %q (without quotes).", timeFmt))
-				return
-			}
-			now := time.Now()
-			later := bestTime(now, alarmTime)
-			mw.stopChan = make(chan struct{}{})
-			go mw.timer(later.Sub(now))
-			mw.status.SetText("Started")
-		case bStop:
-			mw.stop()
+func (mw *MainWindow) Closing() bool {
+	mw.stop()
+	ui.Stop <- struct{}{}
+	return true
+}
+
+func (mw *MainWindow) StartClicked() {
+	mw.stop() // only one alarm at a time
+	alarmTime, err := time.Parse(timeFmt, mw.timebox.Text())
+	if err != nil {
+		mw.win.MsgBoxError(
+			fmt.Sprintf("Error parsing time %q: %v", mw.timebox.Text(), err),
+			fmt.Sprintf("Make sure your time is in the form %q (without quotes).", timeFmt))
+			return
 		}
-//	case TimerFired:
-	case 0://TODO
-		mw.cmd = exec.Command("/bin/sh", "-c", "exec "+cmdbox.Text())
-		// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO should I allow this program to act as a pipe?)
-		// keep stdout /dev/null to avoid stty mucking
-		mw.cmd.Stderr = os.Stderr
-		err := mw.cmd.Start()
-		mw.status.SetText("Firing")
-		if err != nil {
-			mw.win.MsgBoxError(
-				fmt.Sprintf("Error running program: %v", err),
-				"")
-			mw.cmd = nil
-				mw.status.SetText("")
-		}
-		// we're done with the timer, but the goroutine that handles it has returned (or will after we do)
-		// so close the stopChan now so that the next call to mw.stop() doesn't hang or crash
-		close(mw.stopChan)
-		mw.stopChan = nil
+		now := time.Now()
+		later := bestTime(now, alarmTime)
+		mw.stopChan = make(chan struct{})
+		go mw.timer(later.Sub(now))
+		mw.status.SetText("Started")
+}
+
+func (mw *MainWindow) Fire(data interface{}) {
+	mw.cmd = exec.Command("/bin/sh", "-c", "exec " + mw.cmdbox.Text())
+	// keep stdin /dev/null in case user wants to run multiple alarms on one instance (TODO should I allow this program to act as a pipe?)
+	// keep stdout /dev/null to avoid stty mucking
+	mw.cmd.Stderr = os.Stderr
+	err := mw.cmd.Start()
+	mw.status.SetText("Firing")
+	if err != nil {
+		mw.win.MsgBoxError(
+			fmt.Sprintf("Error running program: %v", err),
+			"")
+		mw.cmd = nil
+			mw.status.SetText("")
 	}
+	// we're done with the timer, but the goroutine that handles it has returned (or will after we do)
+	// so close the stopChan now so that the next call to mw.stop() doesn't hang or crash
+	close(mw.stopChan)
+	mw.stopChan = nil
 }
 
 func main() {
-	go func() {
-		<-ui.Start
+	err := ui.Go(func() {		// start
 		NewMainWindow()
-	}()
-	err := ui.Go()
+	})
 	if err != nil {
 		panic(fmt.Errorf("error initializing UI library: %v", err))
 	}
